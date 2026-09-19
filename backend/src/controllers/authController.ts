@@ -208,7 +208,14 @@ export const candidateRegister = async (req: Request, res: Response) => {
     });
 
     // If an assessment code is provided, validate it exists
-    let assessmentInfo = null;
+    let assessmentInfo: {
+      id: string;
+      code: string;
+      title: string;
+      durationMinutes: number;
+      allowedLanguages: string;
+      status: string;
+    } | null = null;
     if (assessmentCode) {
       const code = assessmentCode.trim().toUpperCase();
       assessmentInfo = await prisma.assessment.findUnique({
