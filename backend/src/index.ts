@@ -8,16 +8,29 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const configuredFrontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  process.env.FRONTEND_URL,
+  configuredFrontendUrl,
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined
 ].filter(Boolean) as string[];
 
+function isAllowedOrigin(origin: string): boolean {
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  try {
+    return new URL(origin).hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || isAllowedOrigin(origin)) {
       callback(null, true);
       return;
     }
