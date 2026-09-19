@@ -46,6 +46,15 @@ export const api = {
     return res.json();
   },
 
+  async joinAssessment(assessmentCode: string) {
+    const res = await fetch(`${API_BASE}/candidate/join`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ assessmentCode })
+    });
+    return res.json();
+  },
+
   async getMe() {
     const res = await fetch(`${API_BASE}/auth/me`, {
       headers: getAuthHeaders()

@@ -117,15 +117,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = () => {
     if (!trimmed) { setError('Please enter an assessment code.'); return; }
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/candidate/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('devexam_token')}`
-        },
-        body: JSON.stringify({ assessmentCode: trimmed })
-      });
-      const data = await res.json();
+      const data = await api.joinAssessment(trimmed);
       if (data.success && data.token) {
         localStorage.setItem('devexam_token', data.token);
         window.location.reload();
