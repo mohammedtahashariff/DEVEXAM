@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("ADMIN") // ADMIN, CANDIDATE, RECRUITER
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdAssessments Assessment[] @relation("CreatedAssessments")
+}
+
+model CandidateAccount {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Assessment {
+  id               String   @id @default(uuid())
+  code             String   @unique // e.g. DEVEXAM-7F82K
+  title            String
+  description      String
+  durationMinutes  Int      @default(60)
+  passingScore     Int      @default(70)
+  maxAttempts      Int      @default(1)
+  allowedLanguages String   @default("python,javascript,java,cpp") // comma-separated or json
+  status           String   @default("ACTIVE") // DRAFT, ACTIVE, ARCHIVED
+  startDate        DateTime?
+  endDate          DateTime?
+  creatorId        String?
+  creator          User?    @relation("CreatedAssessments", fields: [creatorId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  questions Question[]
+  attempts  CandidateAttempt[]
+}
+
+model Question {
+  id               String   @id @default(uuid())
+  assessmentId     String
+  assessment       Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  title            String
+  description      String
+  inputFormat      String
+  outputFormat     String
+  constraints      String
+  examplesJson     String   @default("[]") // [{input: "", output: "", explanation: ""}]
+  difficulty       String   @default("MEDIUM") // EASY, MEDIUM, HARD
+  starterCodesJson String   @default("{}") // {python: "", javascript: "", java: "", cpp: ""}
+  points           Int      @default(100)
+  orderIndex       Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  testCases TestCase[]
+  answers   CandidateAnswer[]
+}
+
+model TestCase {
+  id             String   @id @default(uuid())
+  questionId     String
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  input          String
+  expectedOutput String
+  isHidden       Boolean  @default(false)
+  explanation    String?
+  createdAt      DateTime @default(now())
+}
+
+model CandidateAttempt {
+  id                   String    @id @default(uuid())
+  assessmentId         String
+  assessment           Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  candidateName        String
+  candidateEmail       String
+  accessCode           String
+  status               String    @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, SUBMITTED, EXPIRED, FLAGGED
+  score                Int       @default(0)
+  passedQuestions      Int       @default(0)
+  totalQuestions       Int       @default(0)
+  currentQuestionIndex Int       @default(0)
+  startTime            DateTime?
+  expiresAt            DateTime?
+  submittedAt          DateTime?
+  cameraStatus         String    @default("CONNECTED") // CONNECTED, DISCONNECTED, PERMISSION_DENIED
+  micStatus            String    @default("CONNECTED") // CONNECTED, DISCONNECTED, PERMISSION_DENIED
+  fullscreenExits      Int       @default(0)
+  tabSwitches          Int       @default(0)
+  ipAddress            String?
+  userAgent            String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  answers   CandidateAnswer[]
+  events    ProctoringEvent[]
+}
+
+model CandidateAnswer {
+  id              String           @id @default(uuid())
+  attemptId       String
+  attempt         CandidateAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId      String
+  question        Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  code            String           @default("")
+  language        String           @default("python")
+  status          String           @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, PASSED, FAILED, RUNTIME_ERROR
+  score           Int              @default(0)
+  testCasesPassed Int              @default(0)
+  testCasesTotal  Int              @default(0)
+  executionTime   String?          @default("0.00s")
+  memoryUsage     String?          @default("0MB")
+  submittedAt     DateTime?
+  autosavedAt     DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([attemptId, questionId])
+}
+
+model ProctoringEvent {
+  id          String           @id @default(uuid())
+  attemptId   String
+  attempt     CandidateAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  eventType   String           // TAB_SWITCH, FULLSCREEN_EXIT, CAMERA_DISCONNECT, MIC_CHANGE, ASSESSMENT_STARTED, QUESTION_OPENED, CODE_RUN, CODE_SUBMITTED, ASSESSMENT_SUBMITTED
+  severity    String           @default("INFO") // INFO, WARNING, DANGER, CRITICAL
+  questionId  String?
+  timestamp   DateTime         @default(now())
+  detailsJson String           @default("{}")
+}
