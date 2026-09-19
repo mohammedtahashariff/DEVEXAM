@@ -30,6 +30,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Service landing endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'DEV EXAM Backend',
+    health: '/api/health'
+  });
+});
+
 // API Root
 app.use('/api', apiRouter);
 
