@@ -112,7 +112,7 @@ export interface TestCaseResult {
 
 export interface CodeExecutionResponse {
   success: boolean;
-  status: 'SUCCESS' | 'COMPILATION_ERROR' | 'RUNTIME_ERROR' | 'TIME_LIMIT_EXCEEDED' | 'MEMORY_LIMIT_EXCEEDED';
+  status: 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILATION_ERROR' | 'RUNTIME_ERROR' | 'TIME_LIMIT_EXCEEDED' | 'MEMORY_LIMIT_EXCEEDED';
   passed: number;
   failed: number;
   total: number;

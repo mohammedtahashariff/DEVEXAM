@@ -28,7 +28,7 @@ import {
 import { api } from './services/api.js';
 
 export const App: React.FC = () => {
-  const { user, candidateAttempt, currentAssessment, logout } = useAuth();
+  const { user, candidateAttempt, currentAssessment, logout, setCandidateAttempt } = useAuth();
 
   // Navigation State
   const [currentView, setCurrentView] = useState<'landing' | 'admin' | 'candidate_flow'>('landing');

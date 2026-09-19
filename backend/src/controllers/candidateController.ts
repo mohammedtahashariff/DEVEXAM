@@ -613,20 +613,22 @@ export const getMyResults = async (req: AuthenticatedRequest, res: Response) => 
 
 export const exitToDashboard = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const email = req.user?.email;
-    const name = req.user?.name;
-    if (!email) {
+    const user = req.user;
+    const email = user?.email;
+    const name = user?.name;
+    if (!user || !email) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
     const account = await prisma.candidateAccount.findUnique({ where: { email: email.toLowerCase() } });
+    const fallbackUserId = user.id;
     const token = jwt.sign(
       {
-        id: account?.id || req.user.id,
+        id: account?.id || fallbackUserId,
         email: email.toLowerCase(),
         name: name || account?.name || 'Student',
         role: 'CANDIDATE',
-        accountId: account?.id || req.user.id
+        accountId: account?.id || fallbackUserId
       },
       JWT_SECRET,
       { expiresIn: '24h' }
@@ -636,11 +638,11 @@ export const exitToDashboard = async (req: AuthenticatedRequest, res: Response) 
       success: true,
       token,
       user: {
-        id: account?.id || req.user.id,
+        id: account?.id || fallbackUserId,
         email: email.toLowerCase(),
         name: name || account?.name || 'Student',
         role: 'CANDIDATE',
-        accountId: account?.id || req.user.id
+        accountId: account?.id || fallbackUserId
       }
     });
   } catch (error: any) {
